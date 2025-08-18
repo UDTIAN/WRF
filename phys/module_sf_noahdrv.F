@@ -126,6 +126,11 @@ CONTAINS
 
 !----------------------------------------------------------------
     IMPLICIT NONE
+! User-defined region clamp for soil moisture (32–40 N, -110–-100 W)
+  REAL, PARAMETER :: REGION_LAT_MIN = 32.0, REGION_LAT_MAX = 40.0
+  REAL, PARAMETER :: REGION_LON_MIN = -110.0, REGION_LON_MAX = -100.0
+  REAL, PARAMETER :: REGION_SMOIS_CONST = 0.25
+  REAL :: lat_loc, lon_loc
 !----------------------------------------------------------------
 !----------------------------------------------------------------
 ! --- atmospheric (WRF generic) variables
@@ -1882,6 +1887,21 @@ CONTAINS
    errflag = 0
    DO j = jts,jtf
      DO i = its,itf
+       ! Enforce constant soil moisture in user region before Noah computations
+       if ( PRESENT(XLAT) .AND. PRESENT(XLONG) ) then
+         lat_loc = XLAT(i,j)
+         lon_loc = XLONG(i,j)
+         if (lon_loc > 180.0) lon_loc = lon_loc - 360.0
+         if ( (lat_loc >= REGION_LAT_MIN .AND. lat_loc <= REGION_LAT_MAX) .AND. &
+              (lon_loc >= REGION_LON_MIN .AND. lon_loc <= REGION_LON_MAX) ) then
+           if (XLAND(i,j) < 1.5) then
+             do NS=1, num_soil_layers
+               SMOIS(i,NS,j) = MIN(MAXSMC(ISLTYP(i,j)), MAX(0.0, REGION_SMOIS_CONST))
+               SH2O (i,NS,j) = SMOIS(i,NS,j)
+             end do
+           end if
+         end if
+       end if
        IF ( ISLTYP( i,j ) .LT. 1 ) THEN
          errflag = 1
          WRITE(err_message,*)"module_sf_noahdrv.F: lsminit: out of range ISLTYP ",i,j,ISLTYP( i,j )
@@ -1951,6 +1971,26 @@ CONTAINS
          endif                ! of if ((bx > 0.0)
         ENDDO                 ! DO I = its,itf
         ENDDO                 ! DO J = jts,jtf
+
+! Re-enforce constant soil moisture in target region after SH2O init
+        if ( PRESENT(XLAT) .AND. PRESENT(XLONG) ) then
+          do j = jts,jtf
+            do i = its,itf
+              lat_loc = XLAT(i,j)
+              lon_loc = XLONG(i,j)
+              if (lon_loc > 180.0) lon_loc = lon_loc - 360.0
+              if ( (lat_loc >= REGION_LAT_MIN .AND. lat_loc <= REGION_LAT_MAX) .AND. &
+                   (lon_loc >= REGION_LON_MIN .AND. lon_loc <= REGION_LON_MAX) ) then
+                if (XLAND(i,j) < 1.5) then
+                  do NS=1, num_soil_layers
+                    SMOIS(i,NS,j) = MIN(MAXSMC(ISLTYP(i,j)), MAX(0.0, REGION_SMOIS_CONST))
+                    SH2O (i,NS,j) = SMOIS(i,NS,j)
+                  end do
+                end if
+              end if
+            end do
+          end do
+        end if
 !  ENDIF                       ! of IF(.NOT.FNDSOILW)THEN
 
 ! initialize physical snow height SNOWH
