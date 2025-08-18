@@ -323,7 +323,7 @@ CONTAINS
      &          ,irrigation,sf_surf_irr_scheme, irr_daily_amount      & !IRRIG
      &          ,irr_start_hour,irr_num_hours,irr_start_julianday     &
      &          ,irr_end_julianday,irr_freq,irr_ph,irr_rand_field     &
-     &                                                             )
+                                                             )
 
    USE module_state_description, ONLY : SFCLAYSCHEME              &
                                        ,SFCLAYREVSCHEME           &
@@ -1171,7 +1171,6 @@ CONTAINS
 #endif
 #ifdef CN
 !ylu 05/31/2011
-
 !CROP&CN restart and potential output
   integer, optional,  dimension(ims:ime,1:maxpatch,jms:jme ),intent(inout) :: croplive
   real,optional,dimension(ims:ime,1:maxpatch,jms:jme),intent(inout) :: &
@@ -2479,7 +2478,6 @@ CONTAINS
         ENDDO
         ENDDO
      ENDIF
-
 #if ( EM_CORE==1)
 !Katata-added - fog (cloud) water deposition calculation
      IF ( grav_settling .EQ. 0 ) THEN
@@ -2636,7 +2634,6 @@ CONTAINS
 #ifdef WRF_HYDRO
          if(HYDRO_dt .ge. 0) HYDRO_dt = dtbl
 #endif
-
 ! added RA population for WRF/Noah-CMAQ RS Consistency
 ! following Garland et al. (1977) and Nemitz et al., 2009
          IF ( PRESENT(RA) ) THEN
@@ -2901,6 +2898,20 @@ CONTAINS
            deallocate (tslb_tmp)
            deallocate (smois_tmp)
          end if
+
+         IF (PRESENT(XLAT) .AND. PRESENT(XLONG)) THEN
+           DO J = j_start(ij), j_end(ij)
+             DO I = i_start(ij), i_end(ij)
+               IF (XLAT(I,J) >= 32.0 .AND. XLAT(I,J) <= 40.0 .AND. &
+     &             XLONG(I,J) >= -110.0 .AND. XLONG(I,J) <= -100.0) THEN
+                 DO NK = 1, num_soil_layers
+                   SMOIS(I,NK,J) = 0.25
+                   SH2O(I,NK,J)  = 0.25
+                 END DO
+               END IF
+             END DO
+           END DO
+         END IF
 
          call seaice_noah( SEAICE_ALBEDO_OPT, SEAICE_ALBEDO_DEFAULT, SEAICE_THICKNESS_OPT, &
               &            SEAICE_THICKNESS_DEFAULT, SEAICE_SNOWDEPTH_OPT,             &
@@ -3229,7 +3240,6 @@ CONTAINS
   IF ( iopt_run .EQ. 5 ) THEN
      IF ( MOD(itimestep,STEPWTD) .EQ. 0 ) THEN ! STEPWTD always and only non-zero for iopt_run == 5
            CALL wrf_debug( 100, 'calling WTABLE' )
-
 !gmm update wtable from lateral flow and shed water to rivers
 
            CALL WTABLE_mmf_noahmp(num_soil_layers,xland,xice, xice_threshold, isice,        &
@@ -3497,7 +3507,7 @@ CONTAINS
                 rhosnf,precipfr,                                &
                 dz8w,p_phy,t_phy,qv_curr,qc_curr,rho,           & !p_phy in [pa]
                 glw,gsw,emiss,chklowq,                          &
-                chs,flqc,flhc,mavail,canwat,vegfra,albedo,znt,  &
+                chs,flqc,flhc,mavail,canwat,vegfra,albedo,znt,  &   !new
                 z0,snoalb, albbck, lai,                         &   !new
                 mminlu, landusef, nlcat, mosaic_lu,             &
                 mosaic_soil, soilctop, nscat,                   &   !new
@@ -3581,7 +3591,6 @@ CONTAINS
        ELSE
          CALL wrf_error_fatal('Lacking arguments for RUCLSM in surface driver')
        ENDIF
-
      CASE (PXLSMSCHEME)
        IF (PRESENT(qv_curr)    .AND.  PRESENT(qc_curr) .AND.    &
            PRESENT(emiss)      .AND.  PRESENT(t2)      .AND.    &
@@ -3961,8 +3970,6 @@ CONTAINS
        ! PRESENT(ts_urb2d)                          .AND.           &
        ! PRESENT(frc_urb2d) .AND. PRESENT(utype_urb2d)   .AND.      &
                                                       .TRUE. ) THEN
-
-
 !------------------------------------------------------------------
         !For WRF-CTSM simulations, we would like the land model (CTSM)
         ! to handle inland lake points.
@@ -4057,6 +4064,20 @@ CONTAINS
              emiss    = emiss, &
              z0       = z0, &
              znt      = znt)
+
+         IF (PRESENT(XLAT) .AND. PRESENT(XLONG)) THEN
+           DO J = j_start(ij), j_end(ij)
+             DO I = i_start(ij), i_end(ij)
+               IF (XLAT(I,J) >= 32.0 .AND. XLAT(I,J) <= 40.0 .AND. &
+     &             XLONG(I,J) >= -110.0 .AND. XLONG(I,J) <= -100.0) THEN
+                 DO NK = 1, num_soil_layers
+                   SMOIS(I,NK,J) = 0.25
+                   SH2O(I,NK,J)  = 0.25
+                 END DO
+               END IF
+             END DO
+           END DO
+         END IF
 
          call seaice_noah( SEAICE_ALBEDO_OPT, SEAICE_ALBEDO_DEFAULT, SEAICE_THICKNESS_OPT, &
               &            SEAICE_THICKNESS_DEFAULT, SEAICE_SNOWDEPTH_OPT,             &
@@ -4734,7 +4755,6 @@ CONTAINS
           &        ids,ide, jds,jde, kds,kde,                      &
           &        ims,ime, jms,jme, kms,kme,                      &
           &        its,ite, jts,jte, kts,kte    )
-
      ! Set up things for the open ocean call.
      DO j = JTS, JTE
         DO i = ITS, ITE
@@ -5126,7 +5146,6 @@ CONTAINS
            ENDIF
         ENDDO
      ENDDO
-
      QZ0_SEA(its:ite,jts:jte)  = QZ0_HOLD(its:ite,jts:jte)
      THZ0_SEA(its:ite,jts:jte) = THZ0_HOLD(its:ite,jts:jte)
      UZ0_SEA(its:ite,jts:jte)  = UZ0_HOLD(its:ite,jts:jte)
@@ -5320,7 +5339,6 @@ CONTAINS
                                                 QGH_SEA,          &
                                                 QSFC_SEA,         &
                                                 ZNT_SEA
-
 !--------------------------------------------------------------------
 !    Local
 !--------------------------------------------------------------------
@@ -5476,7 +5494,6 @@ CONTAINS
                its,ite, jts,jte, kts,kte,                          &
                ustm_sea,ck_sea,cka_sea,cd_sea,cda_sea,isftcflx,    &
                iz0tlnd                                             )
-
      DO j = JTS , JTE
         DO i = ITS, ITE
            IF ( ( XICE(I,J) .GE. XICE_THRESHOLD )  .and.( XICE(i,j) .LE. 1.0 ) ) THEN
@@ -5671,8 +5688,6 @@ CONTAINS
 !     XLAND
 !     ISFFLX
 !     ITIMESTEP
-
-
 ! Intent (INOUT), original value is used and changed by SF_GFS.
 !     UST
 !     ZNT
@@ -5872,7 +5887,6 @@ CONTAINS
 
      REAL,     DIMENSION( ims:ime, jms:jme )                    , &
                INTENT(INOUT)   ::                      FLHC,FLQC
-
      REAL,     DIMENSION( ims:ime, jms:jme )                    , &
                INTENT(INOUT)   ::                                 &
                                                               QGH
@@ -6429,8 +6443,6 @@ ITIMESTEP,TICE2TSK_IF2COLD,XICE_THRESHOLD,                         &
                              itimestep, .true., tice2tsk_if2cold,     &
                              XICE, XICE_THRESHOLD,                    &
                              SST, TSK, TSK_SEA, TSK_LOCAL )
-
-
 ! INTENT (INOUT) to SFCLAY:  Save the variables before the first call
 ! (for land/frozen water) to SFCLAY, to keep from double-counting the
 ! effects of that routine
@@ -6936,7 +6948,6 @@ HFX_SEA, LH_SEA, QFX_SEA, QGH_SEA, QSFC_SEA, TSK_SEA,  &
      ENDDO
 
    END SUBROUTINE pxsfclay_seaice_wrapper
-
 !-------------------------------------------------------------------------
 
    SUBROUTINE TOPO_RAD_ADJ_DRVR (XLAT,XLONG,COSZEN,               &
@@ -7114,7 +7125,6 @@ HFX_SEA, LH_SEA, QFX_SEA, QGH_SEA, QSFC_SEA, TSK_SEA,  &
       REAL, DIMENSION( ims:ime , jms:jme ), INTENT(INOUT) :: SST         ! Sea surface temperature (K)
       REAL, DIMENSION( ims:ime , jms:jme ), INTENT(OUT)   :: TSK_SEA     ! Sfc temp of open water portion of grid cell 
       REAL, DIMENSION( ims:ime , jms:jme ), INTENT(OUT)   :: TSK_ICE     ! Sfc temp of ice oprtion of grid cell
-
 ! Local
       INTEGER :: i,j
       REAL    :: TICE_MIN
