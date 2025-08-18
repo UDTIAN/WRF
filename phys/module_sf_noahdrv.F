@@ -1888,18 +1888,16 @@ CONTAINS
    DO j = jts,jtf
      DO i = its,itf
        ! Enforce constant soil moisture in user region before Noah computations
-       if ( PRESENT(XLAT) .AND. PRESENT(XLONG) ) then
-         lat_loc = XLAT(i,j)
-         lon_loc = XLONG(i,j)
-         if (lon_loc > 180.0) lon_loc = lon_loc - 360.0
-         if ( (lat_loc >= REGION_LAT_MIN .AND. lat_loc <= REGION_LAT_MAX) .AND. &
-              (lon_loc >= REGION_LON_MIN .AND. lon_loc <= REGION_LON_MAX) ) then
-           if (XLAND(i,j) < 1.5) then
-             do NS=1, num_soil_layers
-               SMOIS(i,NS,j) = MIN(MAXSMC(ISLTYP(i,j)), MAX(0.0, REGION_SMOIS_CONST))
-               SH2O (i,NS,j) = SMOIS(i,NS,j)
-             end do
-           end if
+       lat_loc = XLAT(i,j)
+       lon_loc = XLONG(i,j)
+       if (lon_loc > 180.0) lon_loc = lon_loc - 360.0
+       if ( (lat_loc >= REGION_LAT_MIN .AND. lat_loc <= REGION_LAT_MAX) .AND. &
+            (lon_loc >= REGION_LON_MIN .AND. lon_loc <= REGION_LON_MAX) ) then
+         if (XLAND(i,j) < 1.5) then
+           do NS=1, num_soil_layers
+             SMOIS(i,NS,j) = MIN(MAXSMC(ISLTYP(i,j)), MAX(0.0, REGION_SMOIS_CONST))
+             SH2O (i,NS,j) = SMOIS(i,NS,j)
+           end do
          end if
        end if
        IF ( ISLTYP( i,j ) .LT. 1 ) THEN
@@ -1973,24 +1971,22 @@ CONTAINS
         ENDDO                 ! DO J = jts,jtf
 
 ! Re-enforce constant soil moisture in target region after SH2O init
-        if ( PRESENT(XLAT) .AND. PRESENT(XLONG) ) then
-          do j = jts,jtf
-            do i = its,itf
-              lat_loc = XLAT(i,j)
-              lon_loc = XLONG(i,j)
-              if (lon_loc > 180.0) lon_loc = lon_loc - 360.0
-              if ( (lat_loc >= REGION_LAT_MIN .AND. lat_loc <= REGION_LAT_MAX) .AND. &
-                   (lon_loc >= REGION_LON_MIN .AND. lon_loc <= REGION_LON_MAX) ) then
-                if (XLAND(i,j) < 1.5) then
-                  do NS=1, num_soil_layers
-                    SMOIS(i,NS,j) = MIN(MAXSMC(ISLTYP(i,j)), MAX(0.0, REGION_SMOIS_CONST))
-                    SH2O (i,NS,j) = SMOIS(i,NS,j)
-                  end do
-                end if
+        do j = jts,jtf
+          do i = its,itf
+            lat_loc = XLAT(i,j)
+            lon_loc = XLONG(i,j)
+            if (lon_loc > 180.0) lon_loc = lon_loc - 360.0
+            if ( (lat_loc >= REGION_LAT_MIN .AND. lat_loc <= REGION_LAT_MAX) .AND. &
+                 (lon_loc >= REGION_LON_MIN .AND. lon_loc <= REGION_LON_MAX) ) then
+              if (XLAND(i,j) < 1.5) then
+                do NS=1, num_soil_layers
+                  SMOIS(i,NS,j) = MIN(MAXSMC(ISLTYP(i,j)), MAX(0.0, REGION_SMOIS_CONST))
+                  SH2O (i,NS,j) = SMOIS(i,NS,j)
+                end do
               end if
-            end do
+            end if
           end do
-        end if
+        end do
 !  ENDIF                       ! of IF(.NOT.FNDSOILW)THEN
 
 ! initialize physical snow height SNOWH
