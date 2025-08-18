@@ -126,6 +126,10 @@ CONTAINS
 
 !----------------------------------------------------------------
     IMPLICIT NONE
+! Regional soil moisture override constants (volumetric fraction and bounds)
+    REAL, PARAMETER :: SOIL_OVERRIDE_CONST = 0.30
+    REAL, PARAMETER :: LAT_MIN_SOIL = 32.0, LAT_MAX_SOIL = 40.0
+    REAL, PARAMETER :: LON_MIN_SOIL = -110.0, LON_MAX_SOIL = -100.0
 !----------------------------------------------------------------
 !----------------------------------------------------------------
 ! --- atmospheric (WRF generic) variables
@@ -1764,6 +1768,23 @@ CONTAINS
        endif                                                           !Bep end
 
 !------------------------------------------------------
+! Apply regional soil moisture override (Noah LSM): force constant within lat/lon box
+      IF ( PRESENT(XLAT) .AND. PRESENT(XLONG) ) THEN
+        DO J = JTS, JTE
+          DO I = ITS, ITE
+            IF ( XLAND(I,J) .LT. 1.5 ) THEN
+              IF ( XLAT(I,J) .GE. LAT_MIN_SOIL .AND. XLAT(I,J) .LE. LAT_MAX_SOIL &
+     &             .AND. XLONG(I,J) .GE. LON_MIN_SOIL .AND. XLONG(I,J) .LE. LON_MAX_SOIL ) THEN
+                DO NS = 1, num_soil_layers
+                  SMOIS(I,NS,J) = MIN( 1.0, MAX( 0.0, SOIL_OVERRIDE_CONST ) )
+                  SH2O (I,NS,J) = MIN( 1.0, MAX( 0.0, SOIL_OVERRIDE_CONST ) )
+                END DO
+              END IF
+            END IF
+          END DO
+        END DO
+      END IF
+
    END SUBROUTINE lsm
 !------------------------------------------------------
 
