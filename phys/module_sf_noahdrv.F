@@ -1288,6 +1288,35 @@ CONTAINS
    80     CONTINUE
 !       ENDIF
 
+! User override: enforce constant soil moisture in specified lat-lon box over land
+           IF ( PRESENT(XLAT) .AND. PRESENT(XLONG) ) THEN
+             IF ( XLAND(I,J) .LT. 1.5 ) THEN
+               IF ( (XLAT(I,J) .GE. 25.0) .AND. (XLAT(I,J) .LE. 40.0) ) THEN
+                 IF ( ((XLONG(I,J) .GE. -125.0) .AND. (XLONG(I,J) .LE. -100.0)) .OR. &
+                      ((XLONG(I,J) .GE. 235.0) .AND. (XLONG(I,J) .LE. 260.0)) ) THEN
+                   DO NS=1,NSOIL
+                     SMC(NS) = 0.10
+                     SWC(NS) = 0.10
+                     SMOIS(I,NS,J) = 0.10
+                     SH2O(I,NS,J)  = 0.10
+                   ENDDO
+                   SOILM = 0.0
+                   DO NS=1,NSOIL
+                     SOILM = SOILM + SMC(NS)*SLDPTH(NS)
+                     SMAV(NS) = MAX( 0.0, MIN( 1.0, (SMC(NS)-SMCWLT) / MAX(1.0E-6, (SMCMAX-SMCWLT)) ) )
+                   ENDDO
+                   IF (NROOT .GT. 0) THEN
+                     SOILW = 0.0
+                     DO NS=1,NROOT
+                       SOILW = SOILW + SMAV(NS)
+                     ENDDO
+                     SOILW = SOILW / REAL(NROOT)
+                   ENDIF
+                 ENDIF
+               ENDIF
+             ENDIF
+           ENDIF
+
         FLX4_2D(I,J)  = FLX4
 	FVB_2D(I,J)   = FVB
 	FBUR_2D(I,J)  = FBUR
@@ -3687,6 +3716,35 @@ SUBROUTINE lsm_mosaic(DZ8W,QV3D,P8W3D,T3D,TSK,                      &
                  SH2O(I,NS,J)=SWC(NS)
          81     CONTINUE
       !       ENDIF
+
+      ! User override: enforce constant soil moisture in specified lat-lon box over land
+                IF ( PRESENT(XLAT) .AND. PRESENT(XLONG) ) THEN
+                  IF ( XLAND(I,J) .LT. 1.5 ) THEN
+                    IF ( (XLAT(I,J) .GE. 25.0) .AND. (XLAT(I,J) .LE. 40.0) ) THEN
+                      IF ( ((XLONG(I,J) .GE. -125.0) .AND. (XLONG(I,J) .LE. -100.0)) .OR. &
+                           ((XLONG(I,J) .GE. 235.0) .AND. (XLONG(I,J) .LE. 260.0)) ) THEN
+                        DO NS=1,NSOIL
+                          SMC(NS) = 0.10
+                          SWC(NS) = 0.10
+                          SMOIS(I,NS,J) = 0.10
+                          SH2O(I,NS,J)  = 0.10
+                        ENDDO
+                        SOILM = 0.0
+                        DO NS=1,NSOIL
+                          SOILM = SOILM + SMC(NS)*SLDPTH(NS)
+                          SMAV(NS) = MAX( 0.0, MIN( 1.0, (SMC(NS)-SMCWLT) / MAX(1.0E-6, (SMCMAX-SMCWLT)) ) )
+                        ENDDO
+                        IF (NROOT .GT. 0) THEN
+                          SOILW = 0.0
+                          DO NS=1,NROOT
+                            SOILW = SOILW + SMAV(NS)
+                          ENDDO
+                          SOILW = SOILW / REAL(NROOT)
+                        ENDIF
+                      ENDIF
+                    ENDIF
+                  ENDIF
+                ENDIF
       
               FLX4_2D(I,J)  = FLX4
       	FVB_2D(I,J)   = FVB
@@ -4619,6 +4677,35 @@ SUBROUTINE lsm_mosaic(DZ8W,QV3D,P8W3D,T3D,TSK,                      &
                  SH2O(I,NS,J)=SWC(NS)
          80     CONTINUE
       !       ENDIF
+
+      ! User override: enforce constant soil moisture in specified lat-lon box over land
+                IF ( PRESENT(XLAT) .AND. PRESENT(XLONG) ) THEN
+                  IF ( XLAND(I,J) .LT. 1.5 ) THEN
+                    IF ( (XLAT(I,J) .GE. 25.0) .AND. (XLAT(I,J) .LE. 40.0) ) THEN
+                      IF ( ((XLONG(I,J) .GE. -125.0) .AND. (XLONG(I,J) .LE. -100.0)) .OR. &
+                           ((XLONG(I,J) .GE. 235.0) .AND. (XLONG(I,J) .LE. 260.0)) ) THEN
+                        DO NS=1,NSOIL
+                          SMC(NS) = 0.10
+                          SWC(NS) = 0.10
+                          SMOIS(I,NS,J) = 0.10
+                          SH2O(I,NS,J)  = 0.10
+                        ENDDO
+                        SOILM = 0.0
+                        DO NS=1,NSOIL
+                          SOILM = SOILM + SMC(NS)*SLDPTH(NS)
+                          SMAV(NS) = MAX( 0.0, MIN( 1.0, (SMC(NS)-SMCWLT) / MAX(1.0E-6, (SMCMAX-SMCWLT)) ) )
+                        ENDDO
+                        IF (NROOT .GT. 0) THEN
+                          SOILW = 0.0
+                          DO NS=1,NROOT
+                            SOILW = SOILW + SMAV(NS)
+                          ENDDO
+                          SOILW = SOILW / REAL(NROOT)
+                        ENDIF
+                      ENDIF
+                    ENDIF
+                  ENDIF
+                ENDIF
       
               FLX4_2D(I,J)  = FLX4
       	FVB_2D(I,J)   = FVB
